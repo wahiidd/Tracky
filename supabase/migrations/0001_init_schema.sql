@@ -200,6 +200,7 @@ declare
   v_current int := 0;
   v_longest int := 0;
   v_last date;
+  v_last_scheduled_before_today date;
 begin
   select frequency_type, frequency_config into v_freq_type, v_config
     from habits where id = p_habit_id;
@@ -220,10 +221,11 @@ begin
       from logs
       group by grp
     )
-    select coalesce(max(len), 0) into v_longest from runs;
-
-    select len, end_date into v_current, v_last
-      from runs order by end_date desc limit 1;
+    select
+      coalesce((select max(len) from runs), 0),
+      coalesce((select len from runs order by end_date desc limit 1), 0),
+      (select end_date from runs order by end_date desc limit 1)
+    into v_longest, v_current, v_last;
 
     if v_last is null or v_last < current_date - 1 then
       v_current := 0;
@@ -259,16 +261,16 @@ begin
       where done
       group by grp
     )
-    select coalesce(max(len), 0) into v_longest from runs;
-
-    select len, end_date into v_current, v_last
-      from runs order by end_date desc limit 1;
+    select
+      coalesce((select max(len) from runs), 0),
+      coalesce((select len from runs order by end_date desc limit 1), 0),
+      (select end_date from runs order by end_date desc limit 1),
+      (select max(sched_date) from scheduled where sched_date < current_date)
+    into v_longest, v_current, v_last, v_last_scheduled_before_today;
 
     -- vivant si le dernier jour programmé *passé* (strictement avant aujourd'hui) a été fait ;
     -- le créneau du jour même, s'il n'est pas encore coché, ne casse pas le streak.
-    if v_last is null or v_last < (
-      select max(sched_date) from scheduled where sched_date < current_date
-    ) then
+    if v_last is null or v_last < v_last_scheduled_before_today then
       v_current := 0;
     end if;
 
@@ -307,10 +309,11 @@ begin
       where met
       group by grp
     )
-    select coalesce(max(len), 0) into v_longest from runs;
-
-    select len, end_week into v_current, v_last
-      from runs order by end_week desc limit 1;
+    select
+      coalesce((select max(len) from runs), 0),
+      coalesce((select len from runs order by end_week desc limit 1), 0),
+      (select end_week from runs order by end_week desc limit 1)
+    into v_longest, v_current, v_last;
 
     -- vivant si la dernière semaine réussie est la semaine en cours ou la dernière semaine
     -- complète ; cassé s'il y a une semaine complète manquée entre les deux.
