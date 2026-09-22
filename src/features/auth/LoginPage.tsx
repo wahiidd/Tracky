@@ -5,6 +5,7 @@ import { AppAvatar } from '../../components/AppAvatar'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { Input } from '../../components/Input'
+import { fadeFast, springPop } from '../../lib/motion'
 import { supabase } from '../../lib/supabase/client'
 import { useSession } from './useSession'
 
@@ -52,7 +53,7 @@ export function LoginPage() {
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+        transition={springPop}
         className="w-full max-w-sm"
       >
         <Card>
@@ -89,8 +90,8 @@ export function LoginPage() {
                   key="error"
                   initial={{ opacity: 0, x: 0 }}
                   animate={{ opacity: 1, x: [0, -6, 6, -4, 4, 0] }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  exit={{ opacity: 0, transition: fadeFast }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="text-sm text-danger"
                 >
                   {error}
@@ -101,7 +102,7 @@ export function LoginPage() {
                   key="info"
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
+                  exit={{ opacity: 0, transition: fadeFast }}
                   className="text-sm text-success"
                 >
                   {info}

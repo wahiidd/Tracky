@@ -1,12 +1,14 @@
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Modal } from '../components/Modal'
 import { Skeleton } from '../components/Skeleton'
 import { useToast } from '../components/useToast'
+import { BadgeUnlockOverlay, type UnlockedBadge } from '../features/badges/BadgeUnlockOverlay'
+import { useCheckBadges } from '../features/badges/useCheckBadges'
 import { useCategories } from '../features/categories/useCategories'
 import { HabitForm } from '../features/habits/HabitForm'
 import { HabitListItem } from '../features/habits/HabitListItem'
@@ -36,6 +38,7 @@ type Habit = Pick<
 export function DashboardPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [pendingHabitId, setPendingHabitId] = useState<string | null>(null)
+  const [badgeQueue, setBadgeQueue] = useState<UnlockedBadge[]>([])
   const { showToast } = useToast()
 
   const { data: habits, isLoading: habitsLoading } = useHabits()
@@ -43,6 +46,7 @@ export function DashboardPage() {
   const { data: weekLogs } = useWeekLogs()
   const completeHabit = useCompleteHabit()
   const uncompleteHabit = useUncompleteHabit()
+  const checkBadges = useCheckBadges()
 
   const todayKey = format(new Date(), 'yyyy-MM-dd')
   const today = new Date()
@@ -61,6 +65,14 @@ export function DashboardPage() {
 
   const todayHabits = (habits ?? []).filter((h) => isHabitDueToday(h.frequency_type, h.frequency_config, today))
 
+  const currentBadge = badgeQueue[0] ?? null
+
+  useEffect(() => {
+    if (!currentBadge) return
+    const timer = setTimeout(() => setBadgeQueue((q) => q.slice(1)), 3200)
+    return () => clearTimeout(timer)
+  }, [currentBadge])
+
   async function handleToggle(habit: Habit, completedToday: boolean) {
     setPendingHabitId(habit.id)
     try {
@@ -70,6 +82,10 @@ export function DashboardPage() {
       } else {
         await completeHabit.mutateAsync({ habitId: habit.id, logDate: todayKey })
         showToast({ message: `+${habit.xp_value} XP · ${habit.name}`, variant: 'success' })
+        const newBadges = await checkBadges.mutateAsync()
+        if (newBadges.length > 0) {
+          setBadgeQueue((q) => [...q, ...newBadges])
+        }
       }
     } catch (err) {
       showToast({
@@ -118,7 +134,7 @@ export function DashboardPage() {
         </Card>
       )}
 
-      <motion.div layout className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {todayHabits.map((habit, index) => {
           const logs = logsByHabit.get(habit.id) ?? []
           return (
@@ -126,7 +142,7 @@ export function DashboardPage() {
               key={habit.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.04 }}
+              transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
             >
               <HabitListItem
                 habit={habit}
@@ -139,11 +155,13 @@ export function DashboardPage() {
             </motion.div>
           )
         })}
-      </motion.div>
+      </div>
 
       <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nouvelle habitude">
         <HabitForm onDone={() => setFormOpen(false)} />
       </Modal>
+
+      <BadgeUnlockOverlay badge={currentBadge} onDismiss={() => setBadgeQueue((q) => q.slice(1))} />
     </div>
   )
 }

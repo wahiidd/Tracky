@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { fadeFast, springPop } from '../lib/motion'
 
 interface ModalProps {
   open: boolean
@@ -19,15 +20,15 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={fadeFast}
         >
           <motion.div
             className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-t-2xl border border-border bg-surface p-5 sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
             initial={{ opacity: 0, y: 40, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97, transition: fadeFast }}
+            transition={springPop}
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-text-primary">{title}</h2>

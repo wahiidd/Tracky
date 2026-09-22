@@ -254,6 +254,16 @@ export interface Database {
           out_profile_level: number
         }[]
       }
+      check_and_unlock_badges: {
+        Args: Record<string, never>
+        Returns: {
+          out_badge_id: string
+          out_key: string
+          out_name: string
+          out_description: string
+          out_icon: string
+        }[]
+      }
     }
   }
 }

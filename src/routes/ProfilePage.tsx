@@ -6,6 +6,7 @@ import { Skeleton } from '../components/Skeleton'
 import { useSession } from '../features/auth/useSession'
 import { heroRankForLevel, levelFromTotalXp } from '../features/gamification/xp'
 import { useProfile } from '../features/gamification/useProfile'
+import { fadeFast, springSmooth } from '../lib/motion'
 import { supabase } from '../lib/supabase/client'
 
 export function ProfilePage() {
@@ -39,7 +40,7 @@ export function ProfilePage() {
             <motion.p
               initial={{ opacity: 0, x: 0 }}
               animate={{ opacity: 1, x: [0, -6, 6, -4, 4, 0] }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, transition: fadeFast }}
               className="text-sm text-danger"
             >
               Impossible de charger le profil — vérifie que le schéma Supabase est bien installé.
@@ -60,7 +61,7 @@ export function ProfilePage() {
                 className="h-full rounded-full bg-accent"
                 initial={{ width: 0 }}
                 animate={{ width: `${(progress.xpIntoLevel / progress.xpForNextLevel) * 100}%` }}
-                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                transition={{ ...springSmooth, delay: 0.1 }}
               />
             </div>
             <p className="text-xs text-text-muted">

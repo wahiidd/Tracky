@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Flame } from 'lucide-react'
+import { springSnappy } from '../../lib/motion'
 import type { Database } from '../../lib/supabase/types'
 import { frequencyLabel } from './frequency'
 
@@ -27,20 +28,22 @@ export function HabitListItem({ habit, category, completedToday, weekCount, pend
 
   return (
     <motion.button
-      layout
+      layout="position"
       type="button"
       onClick={onToggle}
       disabled={pending}
       whileTap={{ scale: 0.98 }}
+      transition={springSnappy}
       className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 text-left transition-colors disabled:opacity-60"
     >
       <motion.span
-        animate={{ scale: completedToday ? [1, 1.15, 1] : 1 }}
-        transition={{ duration: 0.28 }}
+        animate={{ scale: completedToday ? [1, 1.18, 1] : 1 }}
+        transition={{ duration: 0.32, ease: 'easeOut' }}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2"
         style={{
           borderColor: color,
           backgroundColor: completedToday ? color : 'transparent',
+          transition: 'background-color 0.2s ease-out, border-color 0.2s ease-out',
         }}
       >
         <AnimatePresence>
@@ -48,8 +51,8 @@ export function HabitListItem({ habit, category, completedToday, weekCount, pend
             <motion.span
               initial={{ scale: 0, rotate: -45 }}
               animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+              exit={{ scale: 0, transition: { duration: 0.12 } }}
+              transition={springSnappy}
             >
               <Check size={16} className="text-white" strokeWidth={3} />
             </motion.span>
